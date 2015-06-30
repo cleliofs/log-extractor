@@ -25,7 +25,9 @@ class DataFiltererImpl extends ScalaDataFilterer {
     lines.toList.drop(1).map(l => {
       val items = l.split(",")
       LogEntry(items(0).toLong, items(1), items(2).toLong)
-    }).filter(e => e.countryCode == country).map(e => s"${e.reqTimestamp},${e.countryCode},${e.resTime}")
+    }).collect {
+      case e if e.countryCode == country => s"${e.reqTimestamp},${e.countryCode},${e.resTime}"
+    }
   }
 
   override def filterByCountryWithResponseTimeAboveLimit(source: String, country: String, limit: Long): Seq[String] = {
@@ -33,9 +35,9 @@ class DataFiltererImpl extends ScalaDataFilterer {
     lines.toList.drop(1).map(l => {
       val items = l.split(",")
       LogEntry(items(0).toLong, items(1), items(2).toLong)
-    }).filter(e => e.countryCode == country)
-      .filter(e => e.resTime > limit)
-      .map(e => s"${e.reqTimestamp},${e.countryCode},${e.resTime}")
+    }).collect {
+      case e if e.countryCode == country && e.resTime > limit => s"${e.reqTimestamp},${e.countryCode},${e.resTime}"
+    }
   }
 
   override def filterByResponseTimeAboveAverage(source: String): Seq[String] = {
@@ -51,8 +53,9 @@ class DataFiltererImpl extends ScalaDataFilterer {
     logEntries.map(l => {
       val items = l.split(",")
       LogEntry(items(0).toLong, items(1), items(2).toLong)
-    }).filter(e => e.resTime > average)
-      .map(e => s"${e.reqTimestamp},${e.countryCode},${e.resTime}")
+    }).collect {
+      case e if e.resTime > average => s"${e.reqTimestamp},${e.countryCode},${e.resTime}"
+    }
   }
 
 }
